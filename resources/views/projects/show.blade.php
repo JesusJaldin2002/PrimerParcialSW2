@@ -13,11 +13,15 @@
                 <div class="card shadow-sm">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h4 class="mb-0"><b>Proyecto: </b> {{ $project->name }}</h4>
+                        <!-- Botón de exportar más alineado -->
+                        <a href="{{ url('export-tasks') }}" class="btn btn-success d-flex align-items-center">
+                            <i class="fas fa-file-excel me-2"></i> Exportar Backlog a Excel
+                        </a>
                     </div>
 
                     <div class="card-body py-4">
                         <p><b>Fecha de Creación:</b> {{ $project->created_at->format('d/m/Y') }}</p>
-
+                        
                         @if ($hasBacklog)
                             <!-- Mostrar Product Backlog -->
                             <h5>Product Backlog</h5>
@@ -39,9 +43,9 @@
                                                     <td>{{ $task->name }}</td>
                                                     <td>{{ $task->description }}</td>
                                                     <td>
-                                                        @if ($task->status == 'pending')
-                                                            <span class="badge bg-warning text-dark">Pendiente</span>
-                                                        @elseif($task->status == 'in_progress')
+                                                        @if ($task->status == 'to do')
+                                                            <span class="badge bg-warning text-dark">Por Hacer</span>
+                                                        @elseif($task->status == 'in progress')
                                                             <span class="badge bg-primary">En Proceso</span>
                                                         @else
                                                             <span class="badge bg-success">Completada</span>
@@ -83,6 +87,4 @@
 @section('scripts')
     <!-- DataTables -->
     <script src="{{ asset('js/datatable.js') }}"></script>
-
-
 @endsection

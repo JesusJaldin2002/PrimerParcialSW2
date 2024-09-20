@@ -3,7 +3,8 @@
 use App\Http\Controllers\ProjectController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-
+use App\Exports\TasksExport;
+use Maatwebsite\Excel\Facades\Excel;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -33,6 +34,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/projects/add', [ProjectController::class,'add'])->name('projects.add');
     Route::post('/projects/{project}/delete', [ProjectController::class,'delete'])->name('projects.delete');
 
-    
+    Route::get('export-tasks', function () {
+        return Excel::download(new TasksExport, 'tasks.xlsx');
+    });
 
 });
