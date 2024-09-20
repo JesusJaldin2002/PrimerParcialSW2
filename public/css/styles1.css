@@ -1,0 +1,70 @@
+/* Ajustes generales de navbar y dropdowns */
+.navbar-collapse {
+    background-color: #252525;
+    z-index: 1000;
+}
+
+.navbar-nav .nav-item .nav-link {
+    color: #ffffff;
+    padding: 16px;
+}
+
+.navbar-nav .nav-item .nav-link:hover {
+    background-color: #495057;
+}
+
+/* Dropdown menu custom color */
+.dropdown-menu {
+    background-color: #343a40;
+}
+
+.dropdown-item {
+    color: #ffffff;
+}
+
+.dropdown-item:hover {
+    background-color: #495057;
+}
+
+/* Responsividad */
+nav.navbar {
+    height: auto;
+}
+
+main {
+    background: #e0e0e0;
+    padding: 20px;
+    min-height: calc(100vh - 75px); /* Ajuste dinámico para evitar scroll innecesario */
+    box-sizing: border-box;
+}
+
+/* Colores ajustados para el cuerpo */
+body {
+    background-color: #e0e0e0;
+    margin: 0;
+    height: 100vh;
+    overflow-y: auto; /* Permitir scroll cuando sea necesario */
+}
+
+/* Para el mensaje de cerrar sesión */
+.notification {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #4CAF50;
+    color: white;
+    padding: 15px;
+    border-radius: 4px;
+    z-index: 1;
+}
+
+/* Ajustes visuales */
+.dropdown-menu-end {
+    text-align: left;
+}
+
+/* Tabla responsive */
+.table-responsive {
+    margin-bottom: 20px;
+}
