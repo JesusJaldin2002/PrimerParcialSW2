@@ -39,11 +39,11 @@ class ProjectController extends Controller
      */
     public function show($id)
     {
-        $project = Project::find($id);
+        $project = Project::with(['sprints.tasks'])->find($id);
 
         // Comprobar si el proyecto existe
         if (!$project) {
-            return redirect()->route('home')->with('error', 'Este proyecto ha sido eliminada.');
+            return redirect()->route('home')->with('error', 'Este proyecto ha sido eliminado.');
         }
 
         // Comprobar si el usuario actual es un colaborador de el proyecto
@@ -51,8 +51,12 @@ class ProjectController extends Controller
             return redirect()->route('home')->with('error', 'No tienes permiso para ver este proyecto.');
         }
 
-        return view('projects.show', compact('project'));
+        // Verificar si el proyecto ya tiene un Product Backlog (sprints y tareas)
+        $hasBacklog = $project->sprints->isNotEmpty() && $project->sprints->pluck('tasks')->flatten()->isNotEmpty();
+
+        return view('projects.show', compact('project', 'hasBacklog'));
     }
+
 
 
     public function delete(string $id)

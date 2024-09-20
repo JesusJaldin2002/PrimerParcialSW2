@@ -15,4 +15,9 @@ class Project extends Model
     {
         return $this->belongsToMany(User::class, 'project_user');
     }
+
+    public function sprints()
+    {
+        return $this->hasMany(Sprint::class);
+    }
 }

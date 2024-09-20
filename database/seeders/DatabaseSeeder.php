@@ -17,6 +17,9 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             UserSeeder::class,
             ProjectSeeder::class,
+            SprintSeeder::class,
+            TaskSeeder::class,
+            SprintTaskSeeder::class,
         ]);
         
         // \App\Models\User::factory()->create([

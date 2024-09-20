@@ -21,7 +21,7 @@
 
     @vite(['resources/sass/app.scss', 'resources/js/app.js'])
 
-    <link rel="stylesheet" href="{{asset('css/styles1.css')}}">
+    <link rel="stylesheet" href="{{ asset('css/styles1.css') }}">
     @yield('styles')
     {{-- Datatables --}}
     <link rel="stylesheet" href="https://cdn.datatables.net/2.0.3/css/dataTables.bootstrap5.css">
@@ -64,6 +64,8 @@
                                     <li><a class="dropdown-item" href="#">Other</a></li>
                                 </ul>
                             </li>
+                            
+                            @yield('navbar-links')
                         </ul>
                     @endauth
 
