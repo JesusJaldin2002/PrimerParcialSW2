@@ -23,12 +23,24 @@ class SprintTaskSeeder extends Seeder
                 'task_id' => 2
             ],
             [
-                'sprint_id' => 2,
+                'sprint_id' => 1,
                 'task_id' => 3
             ],
             [
-                'sprint_id' => 1,
+                'sprint_id' => 2,
                 'task_id' => 4
+            ],
+            [
+                'sprint_id' => 2,
+                'task_id' => 5
+            ],
+            [
+                'sprint_id' => 2,
+                'task_id' => 6
+            ],
+            [
+                'sprint_id' => 2,
+                'task_id' => 7
             ],
         ]);
     }

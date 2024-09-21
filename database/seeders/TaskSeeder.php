@@ -23,22 +23,40 @@ class TaskSeeder extends Seeder
         Task::create([
             'name' => 'HU2',
             'description' => 'Descripción de la Tarea 2',
-            'status' => 'in progress',
+            'status' => 'to do',
             'priority' => 'medium'
         ]);
 
         Task::create([
             'name' => 'HU3',
             'description' => 'Descripción de la Tarea 3',
-            'status' => 'done',
+            'status' => 'in progress',
             'priority' => 'low'
         ]);
 
         Task::create([
-            'name' => 'HU27',
-            'description' => 'Descripción de la Tarea 27',
-            'status' => 'done',
+            'name' => 'HU4',
+            'description' => 'Descripción de la Tarea 4',
+            'status' => 'in progress',
+            'priority' => 'high'
+        ]);
+        Task::create([
+            'name' => 'HU5',
+            'description' => 'Descripción de la Tarea 5',
+            'status' => 'in progress',
             'priority' => 'low'
+        ]);
+        Task::create([
+            'name' => 'HU6',
+            'description' => 'Descripción de la Tarea 6',
+            'status' => 'done',
+            'priority' => 'high'
+        ]);
+        Task::create([
+            'name' => 'HU7',
+            'description' => 'Descripción de la Tarea 7',
+            'status' => 'done',
+            'priority' => 'medium'
         ]);
     }
 }

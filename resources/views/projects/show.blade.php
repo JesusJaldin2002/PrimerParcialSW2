@@ -13,12 +13,31 @@
                 <div class="card shadow-sm">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h4 class="mb-0"><b>Proyecto: </b> {{ $project->name }}</h4>
-                        <!-- Botón de exportar más alineado -->
-                        @if ($hasBacklog)
-                            <a href="{{ url('export-tasks') }}" class="btn btn-success d-flex align-items-center">
-                                <i class="fas fa-file-excel me-2"></i> Exportar Backlog a Excel
-                            </a>
-                        @endif
+                        <div class="d-flex">
+                            @if ($hasBacklog)
+                                <a href="{{ url('export-tasks') }}" class="btn btn-success d-flex align-items-center me-2">
+                                    <i class="fas fa-file-excel me-2"></i> Exportar Backlog a Excel
+                                </a>
+                                <!-- Botón de Editar Backlog -->
+                                <a href="{{ route('backlogs.edit', $project->id) }}"
+                                    class="btn btn-warning d-flex align-items-center me-2">
+                                    <i class="fas fa-edit me-2"></i> Editar Backlog
+                                </a>
+
+                                @if (auth()->user()->id == $project->owner_id)
+                                    <!-- Botón de Eliminar Backlog -->
+                                    <form action="{{ route('backlogs.delete', $project->id) }}" method="POST"
+                                        id="deleteBacklogForm">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="button" class="btn btn-danger d-flex align-items-center"
+                                            onclick="confirmDelete()">
+                                            <i class="fas fa-trash-alt me-2"></i> Eliminar Backlog
+                                        </button>
+                                    </form>
+                                @endif
+                            @endif
+                        </div>
                     </div>
 
                     <div class="card-body py-4">
@@ -89,4 +108,24 @@
 @section('scripts')
     <!-- DataTables -->
     <script src="{{ asset('js/datatable_backlog.js') }}"></script>
+
+    <script>
+        // Función para confirmar eliminación del backlog con SweetAlert
+        function confirmDelete() {
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: "¡No podrás revertir esto!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('deleteBacklogForm').submit();
+                }
+            });
+        }
+    </script>
 @endsection

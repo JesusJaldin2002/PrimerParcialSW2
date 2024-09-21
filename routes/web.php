@@ -45,5 +45,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/backlogs/{id}', [BacklogController::class, 'store'])->name('backlogs.store');
     Route::get('/backlogs/edit/{id}', [BacklogController::class, 'edit'])->name('backlogs.edit');
     Route::put('/backlogs/{id}', [BacklogController::class, 'update'])->name('backlogs.update');
+    Route::delete('/backlogs/{id}/delete', [BacklogController::class, 'destroy'])->name('backlogs.delete');
 
 });

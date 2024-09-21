@@ -264,6 +264,19 @@
             let rows = document.querySelectorAll('#backlogBody tr');
             let incompleteRows = [];
 
+            // Verificar si hay al menos una fila
+            if (rows.length === 0) {
+                event.preventDefault(); // Prevenir el envío del formulario
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Debe haber al menos una tarea en el Product Backlog.',
+                    confirmButtonText: 'OK'
+                });
+                return; // Salir del bloque si no hay filas
+            }
+
+            // Validar que las filas no estén incompletas
             rows.forEach((row, index) => {
                 let inputs = row.querySelectorAll('input, select');
                 let allFilled = true;
