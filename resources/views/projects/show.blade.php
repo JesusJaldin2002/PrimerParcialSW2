@@ -14,14 +14,16 @@
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h4 class="mb-0"><b>Proyecto: </b> {{ $project->name }}</h4>
                         <!-- Botón de exportar más alineado -->
-                        <a href="{{ url('export-tasks') }}" class="btn btn-success d-flex align-items-center">
-                            <i class="fas fa-file-excel me-2"></i> Exportar Backlog a Excel
-                        </a>
+                        @if ($hasBacklog)
+                            <a href="{{ url('export-tasks') }}" class="btn btn-success d-flex align-items-center">
+                                <i class="fas fa-file-excel me-2"></i> Exportar Backlog a Excel
+                            </a>
+                        @endif
                     </div>
 
                     <div class="card-body py-4">
                         <p><b>Fecha de Creación:</b> {{ $project->created_at->format('d/m/Y') }}</p>
-                        
+
                         @if ($hasBacklog)
                             <!-- Mostrar Product Backlog -->
                             <h5>Product Backlog</h5>
@@ -72,7 +74,7 @@
                             <div class="alert alert-warning">
                                 <strong>No hay Product Backlog.</strong> Aún no se han definido sprints ni tareas.
                             </div>
-                            <a href="" class="btn btn-primary">
+                            <a href="{{ route('backlogs.create', $project->id) }}" class="btn btn-primary">
                                 Crear Product Backlog
                             </a>
                         @endif
@@ -86,5 +88,5 @@
 
 @section('scripts')
     <!-- DataTables -->
-    <script src="{{ asset('js/datatable.js') }}"></script>
+    <script src="{{ asset('js/datatable_backlog.js') }}"></script>
 @endsection

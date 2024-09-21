@@ -4,6 +4,7 @@ use App\Http\Controllers\ProjectController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Exports\TasksExport;
+use App\Http\Controllers\BacklogController;
 use Maatwebsite\Excel\Facades\Excel;
 /*
 |--------------------------------------------------------------------------
@@ -34,8 +35,15 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/projects/add', [ProjectController::class,'add'])->name('projects.add');
     Route::post('/projects/{project}/delete', [ProjectController::class,'delete'])->name('projects.delete');
 
+    // Export Excel Backlog
     Route::get('export-tasks', function () {
         return Excel::download(new TasksExport, 'tasks.xlsx');
     });
+
+    //Backlogs
+    Route::get('/backlogs/create/{id}', [BacklogController::class, 'create'])->name('backlogs.create');
+    Route::post('/backlogs/{id}', [BacklogController::class, 'store'])->name('backlogs.store');
+    Route::get('/backlogs/edit/{id}', [BacklogController::class, 'edit'])->name('backlogs.edit');
+    Route::put('/backlogs/{id}', [BacklogController::class, 'update'])->name('backlogs.update');
 
 });
