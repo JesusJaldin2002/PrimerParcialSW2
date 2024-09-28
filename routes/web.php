@@ -29,11 +29,14 @@ Route::middleware(['auth'])->group(function () {
 
     // Projects
     Route::post('/projects', [ProjectController::class,'store'])->name('projects.store');
+    Route::get('/projects/{projectId}/kanban/{sprintId}', [ProjectController::class, 'showKanban'])->name('projects.kanban');
     Route::get('/projects/edit/{id}', [ProjectController::class,'edit'])->name('projects.edit');
     Route::put('/projects/update/{id}', [ProjectController::class, 'update'])->name('projects.update');
     Route::get('/projects/show/{id}', [ProjectController::class,'show'])->name('projects.show');
     Route::post('/projects/add', [ProjectController::class,'add'])->name('projects.add');
     Route::post('/projects/{project}/delete', [ProjectController::class,'delete'])->name('projects.delete');
+    Route::get('/projects/{projectId}/sprints/{sprintId}/tasks', [ProjectController::class, 'getSprintTasks']);
+    Route::put('/projects/tasks/{task}/update-status', [ProjectController::class, 'updateStatus']);
 
     // Export Excel Backlog
     Route::get('export-tasks', function () {

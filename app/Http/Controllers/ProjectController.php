@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Models\User;
+use App\Models\Sprint;
+use App\Models\Task;
 use Illuminate\Http\Request;
 
 class ProjectController extends Controller
@@ -39,6 +41,7 @@ class ProjectController extends Controller
      */
     public function show($id)
     {
+
         $project = Project::with(['sprints.tasks'])->find($id);
 
         // Comprobar si el proyecto existe
@@ -158,5 +161,38 @@ class ProjectController extends Controller
             'deleted' => $project ? false : true,
             'isCollaborator' => $isCollaborator,
         ]);
+    }
+    public function showKanban($projectId, $sprintId)
+    {
+
+        $project = Project::with('sprints.tasks')->findOrFail($projectId);
+        $sprint = Sprint::with('tasks')->findOrFail($sprintId);
+
+        return view('projects.kanban', compact('project', 'sprint'));
+    }
+
+    public function getSprintTasks($projectId, $sprintId)
+    {
+        // Asegúrate de que el sprint pertenezca al proyecto correcto
+        $sprint = Sprint::where('project_id', $projectId)
+            ->where('id', $sprintId)
+            ->with('tasks') // Cargar tareas relacionadas
+            ->firstOrFail();
+
+        // Retornar las tareas en formato JSON
+        return response()->json($sprint->tasks);
+    }
+    public function updateStatus(Request $request, Task $task)
+    {
+        // Validar el nuevo estado
+        $validated = $request->validate([
+            'status' => 'required|in:to do,in progress,done',
+        ]);
+
+        // Actualizar el estado de la tarea
+        $task->status = $validated['status'];
+        $task->save();
+
+        return response()->json(['message' => 'Estado de la tarea actualizado exitosamente'], 200);
     }
 }

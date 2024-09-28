@@ -15,6 +15,17 @@
                         <h4 class="mb-0"><b>Proyecto: </b> {{ $project->name }}</h4>
                         <div class="d-flex">
                             @if ($hasBacklog)
+                                 <div class="dropdown">
+    <button class="btn btn-secondary dropdown-toggle me-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        Seleccionar Sprint
+    </button>
+    <ul class="dropdown-menu">
+        @foreach ($project->sprints as $sprint)
+            <li><a class="dropdown-item" href="{{ route('projects.kanban', ['projectId' => $project->id, 'sprintId' => $sprint->id]) }}">{{ $sprint->name }}</a></li>
+        @endforeach
+    </ul>
+</div>
+
                                 <a href="{{ url('export-tasks') }}" class="btn btn-success d-flex align-items-center me-2">
                                     <i class="fas fa-file-excel me-2"></i> Exportar Backlog a Excel
                                 </a>
