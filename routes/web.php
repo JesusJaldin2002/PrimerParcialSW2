@@ -35,8 +35,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/projects/show/{id}', [ProjectController::class,'show'])->name('projects.show');
     Route::post('/projects/add', [ProjectController::class,'add'])->name('projects.add');
     Route::post('/projects/{project}/delete', [ProjectController::class,'delete'])->name('projects.delete');
+    // Tasks
+    Route::get('/projects/tasks/{taskId}', [ProjectController::class, 'getTask']);
     Route::get('/projects/{projectId}/sprints/{sprintId}/tasks', [ProjectController::class, 'getSprintTasks']);
     Route::put('/projects/tasks/{task}/update-status', [ProjectController::class, 'updateStatus']);
+    Route::delete('/projects/tasks/{task}/delete', [ProjectController::class, 'destroyTask'])->name('projects.tasks.delete');
+
 
     // Export Excel Backlog
     Route::get('export-tasks', function () {

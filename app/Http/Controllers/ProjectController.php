@@ -162,17 +162,33 @@ class ProjectController extends Controller
             'isCollaborator' => $isCollaborator,
         ]);
     }
+
     public function showKanban($projectId, $sprintId)
     {
-
+        // Obtener el proyecto y verificar que el usuario es colaborador o propietario
         $project = Project::with('sprints.tasks')->findOrFail($projectId);
-        $sprint = Sprint::with('tasks')->findOrFail($sprintId);
+
+        // Comprobar si el usuario actual es un colaborador o propietario del proyecto
+        if (!$project->users->contains(auth()->user()->id)) {
+            return redirect()->route('home')->with('error', 'No tienes permiso para ver este tablero.');
+        }
+
+        // Obtener el sprint correspondiente
+        $sprint = Sprint::with('tasks')->where('project_id', $projectId)->findOrFail($sprintId);
 
         return view('projects.kanban', compact('project', 'sprint'));
     }
 
     public function getSprintTasks($projectId, $sprintId)
     {
+        // Obtener el proyecto y verificar que el usuario es colaborador o propietario
+        $project = Project::findOrFail($projectId);
+
+        // Comprobar si el usuario actual es un colaborador o propietario del proyecto
+        if (!$project->users->contains(auth()->user()->id)) {
+            return response()->json(['error' => 'No tienes permiso para acceder a estas tareas'], 403);
+        }
+
         // Asegúrate de que el sprint pertenezca al proyecto correcto
         $sprint = Sprint::where('project_id', $projectId)
             ->where('id', $sprintId)
@@ -182,6 +198,7 @@ class ProjectController extends Controller
         // Retornar las tareas en formato JSON
         return response()->json($sprint->tasks);
     }
+
     public function updateStatus(Request $request, Task $task)
     {
         // Validar el nuevo estado
@@ -194,5 +211,28 @@ class ProjectController extends Controller
         $task->save();
 
         return response()->json(['message' => 'Estado de la tarea actualizado exitosamente'], 200);
+    }
+
+    // Tasks
+
+    public function destroyTask(Task $task)
+    {
+        try {
+            // Eliminar la tarea de la base de datos
+            $task->delete();
+
+            return response()->json(['message' => 'Tarea eliminada con éxito'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error al eliminar la tarea'], 500);
+        }
+    }
+
+    public function getTask($taskId)
+    {
+        // Buscar la tarea por su ID
+        $task = Task::findOrFail($taskId);
+
+        // Retornar la tarea como respuesta JSON
+        return response()->json($task);
     }
 }

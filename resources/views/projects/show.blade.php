@@ -80,7 +80,7 @@
                                                         @elseif($task->status == 'in progress')
                                                             <span class="badge bg-primary">En Proceso</span>
                                                         @else
-                                                            <span class="badge bg-success">Completada</span>
+                                                            <span class="badge bg-success">Completado</span>
                                                         @endif
                                                     </td>
                                                     <td>
