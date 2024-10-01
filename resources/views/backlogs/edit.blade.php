@@ -105,10 +105,12 @@
                                         </tr>
                                     </thead>
                                     <tbody id="backlogBody">
-                                        <!-- Tareas anteriores -->
                                         @foreach ($sprints as $sprint)
                                             @foreach ($sprint->tasks as $task)
                                                 <tr>
+                                                    <!-- Agregar campo oculto para el ID de la tarea existente -->
+                                                    <input type="hidden" name="existing_task_ids[]"
+                                                        value="{{ $task->id }}">
                                                     <td><input type="text" name="task_names[]" class="form-control"
                                                             value="{{ $task->name }}"></td>
                                                     <td><input type="text" name="descriptions[]" class="form-control"

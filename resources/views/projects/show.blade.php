@@ -15,16 +15,19 @@
                         <h4 class="mb-0"><b>Proyecto: </b> {{ $project->name }}</h4>
                         <div class="d-flex">
                             @if ($hasBacklog)
-                                 <div class="dropdown">
-    <button class="btn btn-secondary dropdown-toggle me-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-        Seleccionar Sprint
-    </button>
-    <ul class="dropdown-menu">
-        @foreach ($project->sprints as $sprint)
-            <li><a class="dropdown-item" href="{{ route('projects.kanban', ['projectId' => $project->id, 'sprintId' => $sprint->id]) }}">{{ $sprint->name }}</a></li>
-        @endforeach
-    </ul>
-</div>
+                                <div class="dropdown">
+                                    <button class="btn btn-secondary dropdown-toggle me-2" type="button"
+                                        data-bs-toggle="dropdown" aria-expanded="false">
+                                        Seleccionar Sprint
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        @foreach ($project->sprints as $sprint)
+                                            <li><a class="dropdown-item"
+                                                    href="{{ route('projects.kanban', ['projectId' => $project->id, 'sprintId' => $sprint->id]) }}">{{ $sprint->name }}</a>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </div>
 
                                 <a href="{{ url('export-tasks') }}" class="btn btn-success d-flex align-items-center me-2">
                                     <i class="fas fa-file-excel me-2"></i> Exportar Backlog a Excel
@@ -71,10 +74,10 @@
                                     <tbody>
                                         @foreach ($project->sprints as $sprint)
                                             @foreach ($sprint->tasks as $task)
-                                                <tr>
+                                                <tr data-task-id="{{ $task->id }}">
                                                     <td>{{ $task->name }}</td>
                                                     <td>{{ $task->description }}</td>
-                                                    <td>
+                                                    <td class="task-status">
                                                         @if ($task->status == 'to do')
                                                             <span class="badge bg-warning text-dark">Por Hacer</span>
                                                         @elseif($task->status == 'in progress')
@@ -119,6 +122,65 @@
 @section('scripts')
     <!-- DataTables -->
     <script src="{{ asset('js/datatable_backlog.js') }}"></script>
+
+    {{-- Sockets --}}
+    <script>
+        // Conectar al servidor de Socket.io
+        const socket = io("http://localhost:4444"); // Cambia esta IP por la correcta si es necesario
+
+        // Emitir un evento cuando el usuario esté viendo el proyecto
+        socket.emit('user-connected', {
+            projectId: "{{ $project->id }}",
+            sprintId: null // No necesitamos el sprint en esta vista, pero puedes incluirlo si es necesario
+        });
+
+        // Escuchar el evento de actualización de tareas
+        socket.on('task-updated', function(data) {
+            const taskId = data.taskId;
+            const newStatus = data.newStatus;
+
+            // Hacer una petición AJAX para obtener los detalles de la tarea actualizada
+            axios.get(`/projects/tasks/${taskId}`)
+                .then(response => {
+                    const task = response.data;
+
+                    // Buscar la fila de la tabla donde está la tarea
+                    const row = document.querySelector(`tr[data-task-id="${taskId}"]`);
+
+                    if (row) {
+                        // Actualizar el estado de la tarea en la tabla
+                        const statusCell = row.querySelector('.task-status');
+                        statusCell.innerHTML = getStatusBadge(task.status);
+
+                        // Aquí también puedes actualizar otras columnas si es necesario
+                    }
+                })
+                .catch(error => {
+                    console.error("Error al obtener los detalles de la tarea actualizada:", error);
+                });
+        });
+
+        // Escuchar el evento de eliminación de tareas
+        socket.on('task-deleted', function(taskId) {
+            // Buscar la fila de la tarea eliminada en la tabla
+            const row = document.querySelector(`tr[data-task-id="${taskId}"]`);
+            if (row) {
+                // Eliminar la fila de la tabla
+                row.remove();
+            }
+        });
+
+        // Función auxiliar para obtener el badge de estado
+        function getStatusBadge(status) {
+            if (status === 'to do') {
+                return '<span class="badge bg-warning text-dark">Por Hacer</span>';
+            } else if (status === 'in progress') {
+                return '<span class="badge bg-primary">En Proceso</span>';
+            } else if (status === 'done') {
+                return '<span class="badge bg-success">Completado</span>';
+            }
+        }
+    </script>
 
     <script>
         // Función para confirmar eliminación del backlog con SweetAlert

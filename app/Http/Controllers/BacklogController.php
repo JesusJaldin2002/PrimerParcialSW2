@@ -6,6 +6,7 @@ use App\Models\Project;
 use App\Models\Sprint;
 use App\Models\Task;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class BacklogController extends Controller
 {
@@ -117,94 +118,137 @@ class BacklogController extends Controller
      * Update the specified resource in storage.
      */
     public function update(Request $request, string $id)
-    {
-        // Validación de los datos entrantes
-        $request->validate([
-            'task_names.*' => 'required',
-            'descriptions.*' => 'required',
-            'statuses.*' => 'required|in:to do,in progress,done',
-            'priorities.*' => 'required|in:high,medium,low',
-            'sprints.*' => 'required|integer|min:1',
-        ], [
-            'task_names.*.required' => 'El nombre de la tarea es obligatorio.',
-            'descriptions.*.required' => 'La descripción de la tarea es obligatoria.',
-            'statuses.*.required' => 'El estado de la tarea es obligatorio.',
-            'statuses.*.in' => 'El estado de la tarea es inválido.',
-            'priorities.*.required' => 'La prioridad de la tarea es obligatoria.',
-            'priorities.*.in' => 'La prioridad de la tarea es inválida.',
-            'sprints.*.required' => 'El número de sprint es obligatorio.',
-            'sprints.*.integer' => 'El número de sprint debe ser un número entero.',
-            'sprints.*.min' => 'El número de sprint debe ser al menos 1.',
-        ]);
+{
+    // Validación de los datos entrantes
+    $request->validate([
+        'task_names.*' => 'required',
+        'descriptions.*' => 'required',
+        'statuses.*' => 'required|in:to do,in progress,done',
+        'priorities.*' => 'required|in:high,medium,low',
+        'sprints.*' => 'required|integer|min:1',
+    ], [
+        'task_names.*.required' => 'El nombre de la tarea es obligatorio.',
+        'descriptions.*.required' => 'La descripción de la tarea es obligatoria.',
+        'statuses.*.required' => 'El estado de la tarea es obligatorio.',
+        'statuses.*.in' => 'El estado de la tarea es inválido.',
+        'priorities.*.required' => 'La prioridad de la tarea es obligatoria.',
+        'priorities.*.in' => 'La prioridad de la tarea es inválida.',
+        'sprints.*.required' => 'El número de sprint es obligatorio.',
+        'sprints.*.integer' => 'El número de sprint debe ser un número entero.',
+        'sprints.*.min' => 'El número de sprint debe ser al menos 1.',
+    ]);
 
-        // Obtener el proyecto actual
-        $project = Project::findOrFail($id);
+    // Obtener el proyecto actual
+    $project = Project::findOrFail($id);
 
-        // Obtener los IDs de las tareas existentes
-        $existingTasksIds = $request->input('existing_task_ids', []);
+    // Convertir los IDs de las tareas existentes en enteros para evitar problemas de comparación
+    $existingTasksIds = array_map('intval', $request->input('existing_task_ids', []));
 
-        // Obtener todas las tareas existentes del proyecto
-        $existingTasks = Task::whereHas('sprints', function ($query) use ($project) {
-            $query->where('project_id', $project->id);
-        })->get();
+    // Obtener todas las tareas existentes del proyecto
+    $existingTasks = Task::whereHas('sprints', function ($query) use ($project) {
+        $query->where('project_id', $project->id);
+    })->get()->pluck('id')->toArray();
 
-        // Eliminar tareas que no están presentes en la solicitud
-        $tasksToDelete = $existingTasks->filter(function ($task) use ($existingTasksIds) {
-            return !in_array($task->id, $existingTasksIds);
-        });
-        foreach ($tasksToDelete as $task) {
-            $task->delete(); // Eliminar las tareas faltantes
-        }
+    // Almacenar las nuevas tareas
+    $newTasks = [];
 
-        // Actualizar o crear tareas nuevas
-        foreach ($request->input('task_names') as $index => $taskName) {
-            $taskId = $existingTasksIds[$index] ?? null;
+    // Eliminar tareas que no están presentes en la solicitud
+    $tasksToDelete = array_diff($existingTasks, $existingTasksIds);
 
-            if ($taskId) {
-                // Actualizar la tarea existente
-                $task = Task::findOrFail($taskId);
-                $task->update([
-                    'name' => $taskName,
-                    'description' => $request->input('descriptions')[$index],
-                    'status' => $request->input('statuses')[$index],
-                    'priority' => $request->input('priorities')[$index],
-                ]);
-            } else {
-                // Crear nueva tarea
-                $task = Task::create([
-                    'name' => $taskName,
-                    'description' => $request->input('descriptions')[$index],
-                    'status' => $request->input('statuses')[$index],
-                    'priority' => $request->input('priorities')[$index],
-                ]);
-            }
+    foreach ($tasksToDelete as $taskId) {
+        $task = Task::findOrFail($taskId);
+        $task->delete(); // Eliminar las tareas que ya no existen en la solicitud
+    }
 
-            // Actualizar relación Sprint-Task
-            $sprintNumber = $request->input('sprints')[$index];
-            $sprint = Sprint::firstOrCreate([
-                'name' => $sprintNumber,
-                'project_id' => $project->id,
-            ], [
-                'start_date' => now(),
-                'end_date' => now()->addWeeks(2),
+    // Actualizar o crear tareas nuevas
+    foreach ($request->input('task_names') as $index => $taskName) {
+        $taskId = $existingTasksIds[$index] ?? null;
+
+        if ($taskId && in_array($taskId, $existingTasks)) {
+            // Actualizar la tarea existente
+            $task = Task::findOrFail($taskId);
+            $task->update([
+                'name' => $taskName,
+                'description' => $request->input('descriptions')[$index],
+                'status' => $request->input('statuses')[$index],
+                'priority' => $request->input('priorities')[$index],
+            ]);
+        } else {
+            // Crear nueva tarea si el ID no existe
+            $task = Task::create([
+                'name' => $taskName,
+                'description' => $request->input('descriptions')[$index],
+                'status' => $request->input('statuses')[$index],
+                'priority' => $request->input('priorities')[$index],
             ]);
 
-            // Asegurar que la tarea esté asociada al sprint correcto a través de la tabla pivote
-            if (!$sprint->tasks->contains($task->id)) {
-                $sprint->tasks()->attach($task->id);
-            }
+            // Añadir solo las tareas recién creadas al array de nuevas tareas
+            $newTasks[] = $task;
         }
 
-        // Eliminar sprints que ya no tengan tareas asociadas
-        foreach ($project->sprints as $sprint) {
-            if ($sprint->tasks->isEmpty()) {
-                $sprint->tasks()->detach(); // Limpiar las tareas asociadas
-                $sprint->delete(); // Luego eliminar el sprint
-            }
-        }
+        // Actualizar relación Sprint-Task
+        $sprintNumber = $request->input('sprints')[$index];
+        $sprint = Sprint::firstOrCreate([
+            'name' => $sprintNumber,
+            'project_id' => $project->id,
+        ], [
+            'start_date' => now(),
+            'end_date' => now()->addWeeks(2),
+        ]);
 
-        return redirect()->route('projects.show', $project->id)
-            ->with('success', 'Product Backlog actualizado con éxito.');
+        // Asegurar que la tarea esté asociada al sprint correcto a través de la tabla pivote
+        if (!$sprint->tasks->contains($task->id)) {
+            $sprint->tasks()->attach($task->id);
+        }
+    }
+
+    // Emitir eventos de Socket.io para las nuevas tareas
+    foreach ($newTasks as $newTask) {
+        $this->notifySocketServer($newTask);
+    }
+
+    // Eliminar sprints que ya no tengan tareas asociadas
+    foreach ($project->sprints as $sprint) {
+        if ($sprint->tasks->isEmpty()) {
+            $sprint->tasks()->detach(); // Limpiar las tareas asociadas
+            $sprint->delete(); // Luego eliminar el sprint
+        }
+    }
+
+    return redirect()->route('projects.show', $project->id)
+        ->with('success', 'Product Backlog actualizado con éxito.');
+}
+
+
+    private function notifySocketServer($task)
+    {
+        // Usamos Guzzle para enviar el evento al servidor de WebSockets
+        $client = new \GuzzleHttp\Client();
+        try {
+            $response = $client->post('http://localhost:4444/task-added', [
+                'json' => [
+                    'taskId' => $task->id,
+                    'name' => $task->name,
+                    'status' => $task->status,
+                    'description' => $task->description,  // Incluyendo la descripción
+                    'projectId' => $task->sprints->first()->project_id,
+                    'sprintId' => $task->sprints->first()->id,
+                ]
+            ]);
+
+            // Log para verificar que se está enviando correctamente
+            Log::info('Tarea enviada al servidor de WebSockets: ', [
+                'taskId' => $task->id,
+                'name' => $task->name,
+                'status' => $task->status,
+                'description' => $task->description,
+                'projectId' => $task->sprints->first()->project_id,
+                'sprintId' => $task->sprints->first()->id,
+            ]);
+        } catch (\Exception $e) {
+            // Manejar el error
+            Log::error('Error al enviar el evento al servidor de WebSockets: ' . $e->getMessage());
+        }
     }
 
 

@@ -111,6 +111,26 @@ export default {
                     console.error("Error al eliminar la tarea:", error);
                 });
         },
+        handleTaskAdded(data) {
+            const { taskId, name, status, description, projectId, sprintId } = data;
+      
+            // Verificar que la tarea pertenece al proyecto y sprint actual
+            if (projectId === this.projectId && sprintId === this.sprintId) {
+              const columnIndex = this.columns.findIndex(column => column.name === status);
+      
+              // Verificar si la tarea ya existe para no duplicarla
+              const existingTask = this.columns[columnIndex].tasks.find(task => task.id === taskId);
+      
+              if (!existingTask) {
+                this.columns[columnIndex].tasks.push({
+                  id: taskId,
+                  name: name,
+                  description: description,
+                  status: status,
+                });
+              }
+            }
+          },
         // Este método actualizará las tareas cuando lleguen los eventos del servidor
         handleTaskUpdated(data) {
             const { taskId, newStatus } = data;
@@ -149,7 +169,8 @@ export default {
         this.socket.on("disconnecting", () => {
             console.log("El usuario se está desconectando...");
         });
-
+        
+        this.socket.on("task-added", this.handleTaskAdded);
         // Escuchar eventos del servidor cuando una tarea sea actualizada o eliminada
         this.socket.on('task-updated', this.handleTaskUpdated);
         this.socket.on('task-deleted', this.handleTaskDeleted);
