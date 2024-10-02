@@ -15,7 +15,7 @@ import { createApp } from 'vue';
 
 const app = createApp({});
 
-import KanbanBoard from './components/kanbanBoard.vue';
+import KanbanBoard from './components/KanbanBoard.vue';
 app.component('kanban-board',KanbanBoard );
 
 /**
