@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Exports\TasksExport;
 use App\Http\Controllers\BacklogController;
+use App\Http\Controllers\SprintController;
+use App\Http\Controllers\TaskController;
 use Maatwebsite\Excel\Facades\Excel;
 /*
 |--------------------------------------------------------------------------
@@ -18,8 +20,12 @@ use Maatwebsite\Excel\Facades\Excel;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    if (Auth::check()) {
+        return redirect('/home');
+    }
+    return redirect('/login');
 });
+
 
 Auth::routes();
 // Rutas que requieren autenticación
@@ -53,5 +59,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/backlogs/edit/{id}', [BacklogController::class, 'edit'])->name('backlogs.edit');
     Route::put('/backlogs/{id}', [BacklogController::class, 'update'])->name('backlogs.update');
     Route::delete('/backlogs/{id}/delete', [BacklogController::class, 'destroy'])->name('backlogs.delete');
+
+
+    Route::post('/projects/{project}/sprints/{sprint}/tasks/create', [TaskController::class, 'store']);
+
+    Route::get('/projects/{projectId}/sprints', [SprintController::class, 'getSprints']);
+
 
 });

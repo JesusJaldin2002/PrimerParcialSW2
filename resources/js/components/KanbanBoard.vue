@@ -1,57 +1,79 @@
 <template>
-        <div class="board-wrapper">
-            <div
-                v-for="(column, index) in columns"
-                :key="index"
-                :data-column-index="index"
-                :id="column.id"
-                class="board-column"
+    <div class="board-wrapper">
+        <div
+            v-for="(column, index) in columns"
+            :key="index"
+            :data-column-index="index"
+            :id="column.id"
+            class="board-column"
+        >
+            <div class="column-header">
+                <h2>{{ column.displayName }}</h2>
+            </div>
+
+            <draggable
+                v-model="column.tasks"
+                group="tasks"
+                class="task-list"
+                @start="onDragStart"
+                @end="onDragEnd"
+                :itemKey="(task) => task.id"
             >
-                <div class="column-header">
-                    <h2>{{ column.displayName }}</h2>
-                </div>
-
-                <draggable
-                    v-model="column.tasks"
-                    group="tasks"
-                    class="task-list"
-                    @start="onDragStart"
-                    @end="onDragEnd"
-                    :itemKey="(task) => task.id"
-                >
-                    <template #item="{ element }">
-                        <div class="task-card">
-                            <div class="task-card-header">
-                                <div class="task-card-title">
-                                    {{ element.name }}
-                                </div>
-                                <button @click="confirmDeleteTask(element.id)" class="btn-delete">&times;</button>
+                <template #item="{ element }">
+                    <div class="task-card">
+                        <div class="task-card-header">
+                            <div class="task-card-title">
+                                {{ element.name }}
                             </div>
-                            <div class="task-card-description">
-                                {{ element.description }}
-                            </div>
+                            <button
+                                @click="confirmDeleteTask(element.id)"
+                                class="btn-delete"
+                            >
+                                &times;
+                            </button>
                         </div>
-                    </template>
-                </draggable>
+                        <div class="task-card-description">
+                            {{ element.description }}
+                        </div>
+                    </div>
+                </template>
+            </draggable>
 
-                <div class="add-task">
-                    <input
-                        v-model="newTask"
-                        @keyup.enter="addTask(index)"
-                        class="add-task-input"
-                        placeholder="Añadir una tarea..."
-                    />
-                </div>
+            <div class="add-task">
+                <button @click="openModal(index)" class="add-task-button">
+                    Añadir una tarea
+                </button>
             </div>
         </div>
+
+        <!-- Modal -->
+        <div v-if="isModalOpen" class="modal">
+            <div class="modal-content">
+                <span class="close" @click="closeModal">&times;</span>
+                <h2>Añadir nueva tarea</h2>
+                <input
+                    v-model="newTask.name"
+                    placeholder="Nombre de la tarea"
+                />
+                <textarea
+                    v-model="newTask.description"
+                    placeholder="Descripción"
+                ></textarea>
+                <select v-model="newTask.priority">
+                    <option disabled value="">Selecciona una prioridad</option>
+                    <option value="high">Alta</option>
+                    <option value="medium">Media</option>
+                    <option value="low">Baja</option>
+                </select>
+                <button @click="saveTask">Guardar tarea</button>
+            </div>
+        </div>
+    </div>
 </template>
-
-
 
 <script src="./kanbanBoard.js"></script>
 
 <style scoped>
-
 .task-card-header {
     display: flex;
     justify-content: space-between;
@@ -63,7 +85,7 @@
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    background-color: #e0e0e0 ;
+    background-color: #e0e0e0;
     border-radius: 12px;
     padding: 40px 20px;
     height: auto;
@@ -76,13 +98,12 @@
     gap: 20px;
     max-width: 1200px;
     width: auto;
-    background-color: #a8a7a7 ;
+    background-color: #a8a7a7;
     padding: 20px;
     border-radius: 12px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     overflow-x: auto;
     height: auto;
-
 }
 
 .board-column {
@@ -132,7 +153,6 @@
 .task-card:hover {
     transform: scale(1.01);
     background-color: #ebe0e0;
-
 }
 
 .task-card-title {
@@ -222,5 +242,112 @@
 
 .btn-delete:hover {
     color: #c0392b; /* Cambiar el color de la "X" al pasar el mouse */
+}
+/* Fondo del modal */
+.modal {
+    display: block;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Oscurece el fondo */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Contenido del modal */
+.modal-content {
+    background-color: #ffffff;
+    padding: 30px 40px;
+    border-radius: 12px; /* Bordes redondeados */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Sombra para profundidad */
+    width: 100%;
+    max-width: 400px; /* Ancho máximo */
+    animation: fadeIn 0.3s ease-in-out; /* Animación de entrada */
+}
+
+/* Animación del modal */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Estilo del botón de cerrar */
+.close {
+    color: #333;
+    float: right;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.close:hover {
+    color: #e74c3c; /* Rojo para hover */
+}
+
+/* Estilos de los campos de entrada */
+.modal-content input[type="text"],
+.modal-content textarea,
+.modal-content select {
+    width: 100%;
+    padding: 12px;
+    margin-top: 8px;
+    margin-bottom: 16px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 16px;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+}
+
+.modal-content input[type="text"]:focus,
+.modal-content textarea:focus,
+.modal-content select:focus {
+    border-color: #3498db; /* Azul claro al hacer foco */
+    outline: none;
+}
+
+/* Botón de guardar */
+.modal-content button {
+    width: 100%;
+    padding: 12px;
+    background-color: #3498db; /* Color azul del botón */
+    color: white;
+    font-size: 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.modal-content button:hover {
+    background-color: #2980b9; /* Oscurece al hacer hover */
+}
+
+/* Título del modal */
+.modal-content h2 {
+    margin-top: 0;
+    font-size: 24px;
+    color: #333;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Centrado de la ventana modal en todas las resoluciones */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 90%;
+        margin: auto;
+    }
 }
 </style>

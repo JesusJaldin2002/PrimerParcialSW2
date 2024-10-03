@@ -108,13 +108,19 @@
                                         @foreach ($sprints as $sprint)
                                             @foreach ($sprint->tasks as $task)
                                                 <tr>
-                                                    <!-- Agregar campo oculto para el ID de la tarea existente -->
-                                                    <input type="hidden" name="existing_task_ids[]"
-                                                        value="{{ $task->id }}">
-                                                    <td><input type="text" name="task_names[]" class="form-control"
-                                                            value="{{ $task->name }}"></td>
-                                                    <td><input type="text" name="descriptions[]" class="form-control"
-                                                            value="{{ $task->description }}"></td>
+                                                    <!-- Campo oculto para el ID de la tarea existente -->
+                                                    <td style="display: none;">
+                                                        <input type="hidden" name="existing_task_ids[]"
+                                                            value="{{ $task->id }}">
+                                                    </td>
+                                                    <td>
+                                                        <input type="text" name="task_names[]" class="form-control"
+                                                            value="{{ $task->name }}">
+                                                    </td>
+                                                    <td>
+                                                        <input type="text" name="descriptions[]" class="form-control"
+                                                            value="{{ $task->description }}">
+                                                    </td>
                                                     <td>
                                                         <select name="statuses[]" class="form-control">
                                                             <option value="to do"
@@ -141,8 +147,10 @@
                                                             </option>
                                                         </select>
                                                     </td>
-                                                    <td><input type="number" name="sprints[]" class="form-control"
-                                                            value="{{ $sprint->name }}"></td>
+                                                    <td>
+                                                        <input type="number" name="sprints[]" class="form-control"
+                                                            value="{{ $sprint->name }}">
+                                                    </td>
                                                     <td>
                                                         <button type="button" class="btn btn-danger"
                                                             onclick="deleteRow(this)">

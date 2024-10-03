@@ -1,5 +1,23 @@
 @extends('layouts.app')
 
+@section('styles')
+    <style>
+        @media (max-width: 768px) {
+
+            .d-flex.flex-wrap>.dropdown,
+            .d-flex.flex-wrap>a,
+            .d-flex.flex-wrap>form {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+
+            .dropdown-toggle {
+                width: 100%;
+            }
+        }
+    </style>
+@endsection
+
 @section('navbar-links')
     <li class="nav-item">
         <a class="nav-link" href="">Tableros</a>
@@ -11,12 +29,12 @@
         <div class="row justify-content-center">
             <div class="col-md-11">
                 <div class="card shadow-sm">
-                    <div class="card-header d-flex justify-content-between align-items-center">
+                    <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
                         <h4 class="mb-0"><b>Proyecto: </b> {{ $project->name }}</h4>
-                        <div class="d-flex">
+                        <div class="d-flex flex-wrap mt-2 mt-md-0">
                             @if ($hasBacklog)
-                                <div class="dropdown">
-                                    <button class="btn btn-secondary dropdown-toggle me-2" type="button"
+                                <div class="dropdown me-2">
+                                    <button class="btn btn-secondary dropdown-toggle" type="button"
                                         data-bs-toggle="dropdown" aria-expanded="false">
                                         Seleccionar Sprint
                                     </button>
@@ -32,14 +50,13 @@
                                 <a href="{{ url('export-tasks') }}" class="btn btn-success d-flex align-items-center me-2">
                                     <i class="fas fa-file-excel me-2"></i> Exportar Backlog a Excel
                                 </a>
-                                <!-- Botón de Editar Backlog -->
+
                                 <a href="{{ route('backlogs.edit', $project->id) }}"
                                     class="btn btn-warning d-flex align-items-center me-2">
                                     <i class="fas fa-edit me-2"></i> Editar Backlog
                                 </a>
 
                                 @if (auth()->user()->id == $project->owner_id)
-                                    <!-- Botón de Eliminar Backlog -->
                                     <form action="{{ route('backlogs.delete', $project->id) }}" method="POST"
                                         id="deleteBacklogForm">
                                         @csrf
@@ -58,7 +75,6 @@
                         <p><b>Fecha de Creación:</b> {{ $project->created_at->format('d/m/Y') }}</p>
 
                         @if ($hasBacklog)
-                            <!-- Mostrar Product Backlog -->
                             <h5>Product Backlog</h5>
                             <div class="table-responsive">
                                 <table class="table table-bordered table-striped" id="datatable">
@@ -74,7 +90,7 @@
                                     <tbody>
                                         @foreach ($project->sprints as $sprint)
                                             @foreach ($sprint->tasks as $task)
-                                                <tr data-task-id="{{ $task->id }}">
+                                                <tr data-sprint="{{ $sprint->name }}" data-task="{{ $task->name }}">
                                                     <td>{{ $task->name }}</td>
                                                     <td>{{ $task->description }}</td>
                                                     <td class="task-status">
@@ -103,13 +119,11 @@
                                 </table>
                             </div>
                         @else
-                            <!-- Mostrar botón de crear Product Backlog -->
                             <div class="alert alert-warning">
                                 <strong>No hay Product Backlog.</strong> Aún no se han definido sprints ni tareas.
                             </div>
-                            <a href="{{ route('backlogs.create', $project->id) }}" class="btn btn-primary">
-                                Crear Product Backlog
-                            </a>
+                            <a href="{{ route('backlogs.create', $project->id) }}" class="btn btn-primary">Crear Product
+                                Backlog</a>
                         @endif
                     </div>
                 </div>
@@ -120,57 +134,74 @@
 @endsection
 
 @section('scripts')
-    <!-- DataTables -->
     <script src="{{ asset('js/datatable_backlog.js') }}"></script>
 
-    {{-- Sockets --}}
     <script>
-        // Conectar al servidor de Socket.io
-        const socket = io("http://localhost:4444"); // Cambia esta IP por la correcta si es necesario
+        const socket = io("http://localhost:4444");
 
-        // Emitir un evento cuando el usuario esté viendo el proyecto
         socket.emit('user-connected', {
             projectId: "{{ $project->id }}",
-            sprintId: null // No necesitamos el sprint en esta vista, pero puedes incluirlo si es necesario
+            sprintId: null
         });
 
-        // Escuchar el evento de actualización de tareas
         socket.on('task-updated', function(data) {
             const taskId = data.taskId;
-            const newStatus = data.newStatus;
-
-            // Hacer una petición AJAX para obtener los detalles de la tarea actualizada
-            axios.get(`/projects/tasks/${taskId}`)
-                .then(response => {
-                    const task = response.data;
-
-                    // Buscar la fila de la tabla donde está la tarea
-                    const row = document.querySelector(`tr[data-task-id="${taskId}"]`);
-
-                    if (row) {
-                        // Actualizar el estado de la tarea en la tabla
-                        const statusCell = row.querySelector('.task-status');
-                        statusCell.innerHTML = getStatusBadge(task.status);
-
-                        // Aquí también puedes actualizar otras columnas si es necesario
-                    }
-                })
-                .catch(error => {
-                    console.error("Error al obtener los detalles de la tarea actualizada:", error);
-                });
+            axios.get(`/projects/tasks/${taskId}`).then(response => {
+                const task = response.data;
+                const row = document.querySelector(`tr[data-task-id="${taskId}"]`);
+                if (row) {
+                    const statusCell = row.querySelector('.task-status');
+                    statusCell.innerHTML = getStatusBadge(task.status);
+                }
+            }).catch(error => {
+                console.error("Error al obtener los detalles de la tarea actualizada:", error);
+            });
         });
 
-        // Escuchar el evento de eliminación de tareas
+        socket.on('task-modal-created', function(data) {
+            const taskId = data.taskId;
+            const sprintName = data.sprintName; // Usamos el nombre del sprint
+            const statusBadge = getStatusBadge(data.status);
+            const priorityBadge = getPriorityBadge(data.priority);
+
+            // Crear la nueva fila de la tarea
+            const newTaskRow = `
+            <tr data-task-id="${taskId}">
+            <td>${data.name}</td>
+            <td>${data.description}</td>
+            <td>${statusBadge}</td>
+            <td>${priorityBadge}</td>
+            <td>Sprint ${sprintName}</td>
+            </tr>
+            `;
+
+            // Buscar filas que tengan la celda con el nombre del sprint
+            const rows = document.querySelectorAll('tbody tr');
+            let lastSprintRow = null;
+
+            rows.forEach(row => {
+                const sprintCell = row.cells[4]; // La celda del sprint está en la columna 5 (index 4)
+                if (sprintCell && sprintCell.textContent.trim() === `Sprint ${sprintName}`) {
+                    lastSprintRow = row; // Guardar la última fila que pertenece a este sprint
+                }
+            });
+
+            if (lastSprintRow) {
+                // Insertar la nueva tarea después de la última tarea del sprint correspondiente
+                lastSprintRow.insertAdjacentHTML('afterend', newTaskRow);
+            } else {
+                // Si no hay filas del sprint, agregarla al final
+                document.querySelector('tbody').insertAdjacentHTML('beforeend', newTaskRow);
+            }
+        });
+
         socket.on('task-deleted', function(taskId) {
-            // Buscar la fila de la tarea eliminada en la tabla
             const row = document.querySelector(`tr[data-task-id="${taskId}"]`);
             if (row) {
-                // Eliminar la fila de la tabla
                 row.remove();
             }
         });
 
-        // Función auxiliar para obtener el badge de estado
         function getStatusBadge(status) {
             if (status === 'to do') {
                 return '<span class="badge bg-warning text-dark">Por Hacer</span>';
@@ -180,10 +211,17 @@
                 return '<span class="badge bg-success">Completado</span>';
             }
         }
-    </script>
 
-    <script>
-        // Función para confirmar eliminación del backlog con SweetAlert
+        function getPriorityBadge(priority) {
+            if (priority === 'high') {
+                return '<span class="badge bg-danger">Alta</span>';
+            } else if (priority === 'medium') {
+                return '<span class="badge bg-warning">Media</span>';
+            } else {
+                return '<span class="badge bg-secondary">Baja</span>';
+            }
+        }
+
         function confirmDelete() {
             Swal.fire({
                 title: '¿Estás seguro?',

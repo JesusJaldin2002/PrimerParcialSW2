@@ -1,39 +1,35 @@
-
 // Verifica si DataTable ya está inicializado y destrúyelo
-if ($.fn.DataTable.isDataTable('#datatable')) {
-    $('#datatable').DataTable().destroy();
+if ($.fn.DataTable.isDataTable("#datatable")) {
+    $("#datatable").DataTable().destroy();
 }
 
-// Espera a que el documento esté listo antes de inicializar DataTable
 $(document).ready(function() {
-    // Inicializa el DataTable
+    $.fn.dataTable.ext.type.order['hu-pre'] = function ( data ) {
+        var match = data.match(/HU(\d+)/);
+        return match ? parseInt( match[1], 10 ) : 0;
+    };
+
     $('#datatable').DataTable({
         responsive: true,
         autoWidth: false,
         "language": {
-            "lengthMenu":   "Mostrar " +
-                `<select class="custom-select custom-select-sm form-control form-control-sm">
-                    <option value="10" >10</option>
-                    <option value="25" >25</option>
-                    <option value="50" >50</option>
-                    <option value="100" >100</option>
-                    <option value="-1" >All</option>
-                    </select>` + 
-                    " registros por página",
-            "zeroRecords": "No se encontró ningun resultado",
+            "lengthMenu": "Mostrar _MENU_ registros por página",
+            "zeroRecords": "No se encontró ningún resultado",
             "info": "Mostrando la página _PAGE_ de _PAGES_",
-            "infoEmpty": "No records available",
-            "infoFiltered": "(Filtrado de _MAX_ total registros totales)",
-            "search" : "Buscar",
-            "paginate" : {
-                "next" : "Siguiente",
-                "previous" : "Anterior"
+            "infoEmpty": "No hay registros disponibles",
+            "infoFiltered": "(filtrado de _MAX_ registros totales)",
+            "search": "Buscar:",
+            "paginate": {
+                "next": "Siguiente",
+                "previous": "Anterior"
             }
         },
-        // Ordenar por la columna Sprint (índice 4) y luego por la columna Número de Tarea (índice 0)
-        "order": [
-            [4, 'asc'], // Ordenar por Sprint primero (columna 4)
-            [0, 'asc']  // Luego por el número de tarea (columna 0)
+        columnDefs: [
+            { type: 'hu', targets: 0 }  // Aplica el tipo de ordenamiento personalizado a la columna de tareas
+        ],
+        order: [
+            [4, 'asc'],  // Ordena primero por Sprint (suponiendo que está en la columna 4)
+            [0, 'asc']   // Luego por Tarea (columna 0)
         ]
     });
 });

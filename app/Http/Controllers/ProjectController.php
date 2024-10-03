@@ -199,18 +199,33 @@ class ProjectController extends Controller
         return response()->json($sprint->tasks);
     }
 
-    public function updateStatus(Request $request, Task $task)
+    public function updateStatus(Request $request, $taskId)
     {
-        // Validar el nuevo estado
-        $validated = $request->validate([
+        // Validar que se recibe el sprintId y el estado
+        $request->validate([
             'status' => 'required|in:to do,in progress,done',
+            'sprintId' => 'required|exists:sprints,id',  // Asegurarse de que el sprintId es válido
         ]);
 
+        // Obtener la tarea
+        $task = Task::findOrFail($taskId);
+        $sprintId = $request->input('sprintId');
+
+        // Verificar si la tarea pertenece al sprint correcto
+        if (!$task->sprints->contains($sprintId)) {
+            return response()->json([
+                'message' => 'La tarea no pertenece a este sprint',
+            ], 400);  // Si no pertenece al sprint, devolver error
+        }
+
         // Actualizar el estado de la tarea
-        $task->status = $validated['status'];
+        $task->status = $request->input('status');
         $task->save();
 
-        return response()->json(['message' => 'Estado de la tarea actualizado exitosamente'], 200);
+        return response()->json([
+            'message' => 'Estado de la tarea actualizado con éxito',
+            'task' => $task
+        ]);
     }
 
     // Tasks
