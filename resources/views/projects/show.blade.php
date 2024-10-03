@@ -137,7 +137,7 @@
     <script src="{{ asset('js/datatable_backlog.js') }}"></script>
 
     <script>
-        const socket = io("http://localhost:4444");
+        const socket = io("http://3.80.234.179:80");
 
         socket.emit('user-connected', {
             projectId: "{{ $project->id }}",

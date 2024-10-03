@@ -370,7 +370,7 @@ export default {
         this.loadSprints(); 
         this.fetchSprintTasks();
 
-        this.socket = io("http://localhost:4444");
+        this.socket = io("http://3.80.234.179:80");
 
         this.socket.emit("user-connected", {
             projectId: this.projectId,

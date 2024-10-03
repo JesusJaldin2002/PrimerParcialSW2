@@ -312,7 +312,7 @@ class BacklogController extends Controller
             }
 
             // Enviar la solicitud al servidor de sockets
-            $response = $client->post('http://localhost:4444/' . $eventType, [
+            $response = $client->post('http://3.80.234.179:80/' . $eventType, [
                 'json' => $data
             ]);
 
